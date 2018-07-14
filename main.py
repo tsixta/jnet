@@ -1,6 +1,7 @@
 import os
 import argparse
 import ast
+import sys
 from enum import Enum
 import torch
 from dataset import Cells,get_isbi_filenames,validation_split,is_iterable
@@ -47,11 +48,10 @@ def print_eval_vis_commands(args):
   cuda_visible_devices=""
   if "CUDA_VISIBLE_DEVICES" in os.environ:
     cuda_visible_devices = "CUDA_VISIBLE_DEVICES="+os.environ['CUDA_VISIBLE_DEVICES']+" "
-    
-  common_prefix=cuda_visible_devices+"python3 main.py "+cuda+" --resolution_levels '"+str(args.resolution_levels)+"' --dt_bound "+str(args.dt_bound)
-  test_dataset=args.dataset_root.replace("_training/orig","_test")
+  common_prefix=cuda_visible_devices+"python3 "+sys.argv[0]+" "+cuda+" --resolution_levels '"+str(args.resolution_levels)+"' --dt_bound "+str(args.dt_bound)
+  test_dataset=args.dataset_root.replace("_training","_test")
 
-  print("===Eval command best validation===")
+  print("===Eval command best train===")
   print(common_prefix+" --images_idx '"+str(args.images_idx)+"' --mode eval --dataset_root "+args.dataset_root+" --model_file "+args.output_dir+"/model_best_train_train --output_dir "+args.output_dir)
   print("===Vis command===")
   print(common_prefix+" --images_idx '{\"01\":[],\"02\":[]}' --mode vis --dataset_root "+test_dataset+" --model_file "+args.output_dir+"/model_best_train_train --output_dir "+args.output_dir)
@@ -66,7 +66,7 @@ parser.add_argument('--images_idx', required=True, type=str,help='Dictionary wit
 parser.add_argument('--output_dir', required=True, type=str,help='Output directory')
 parser.add_argument('--mode',default=Mode.Train,type=Mode,help="Mode, one of the following: "+str([str(mode) for mode in list(Mode)]))
 parser.add_argument('--resolution_levels', required=True, type=str,help='List of resolutions in the pipeline. 0 means the original resolution, -1 downscale by factor 2, -2 downscale by factor 4 etc.')
-parser.add_argument('--structure',required=True,type=str,help='Structure of the network [[numof_layers1,numof_channels1,rf_size1],[numof_layers2,additional_numof_channels2,rf_size2],[numof_layers3,additional_numof_channels3,rf_size3]...]')
+parser.add_argument('--structure',type=str,help='Structure of the network [[numof_layers1,numof_channels1,rf_size1],[numof_layers2,additional_numof_channels2,rf_size2],[numof_layers3,additional_numof_channels3,rf_size3]...]')
 parser.add_argument('--aug_elastic_params', default='[]', type=str,help='Augmentation elastic, list of admissible [alpha sigma], alpha<=0 or sigma<=0 means no elastic transform')
 parser.add_argument('--aug_intensity_params', default='[]', type=str,help='Augmentation intensity, list of [shift_lbound, shift_ubound, mult_lbound, mult_ubound]')
 parser.add_argument('--aug_rotation', action='store_true', help='Augmentation rotation.')

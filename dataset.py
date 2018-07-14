@@ -20,13 +20,12 @@ def get_isbi_filenames(root_dir,images_idx={"01":[],"02":[]}):
     images_root=os.path.join(root_dir,sequence)
     seg_root=os.path.join(root_dir,sequence+"_GT","SEG")
     if len(images_idx[sequence])==0:
-      n=len(glob.glob(os.path.join(images_root,"*.tif")))
-      idx=[str(i).zfill(3) for i in range(0,n)]
+      images+=glob.glob(os.path.join(images_root,"*.tif"))
     else:
       idx=images_idx[sequence]
-    images+=[os.path.join(images_root,"t"+x+".tif") for x in idx]
-    gt+=[os.path.join(seg_root,"man_seg"+x+".tif") for x in idx]
-  return(images,gt)
+      images+=[os.path.join(images_root,"t"+x+".tif") for x in idx]
+      gt+=[os.path.join(seg_root,"man_seg"+x+".tif") for x in idx]
+  return(sorted(images),sorted(gt))
 
 def get_isbi_dataset_intensity_min_max(dataset_name):
   retmin=0
