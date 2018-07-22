@@ -59,7 +59,19 @@ def tensor_roll(tensor, shift, axis):
     after = tensor.narrow(axis, after_start, shift)
     return torch.cat([after, before], axis)
     
-    
+class RandomCrop:
+  def __init__(self,dim3,dim2):
+    self.dim2=dim2
+    self.dim3=dim3
+  def __call__(self,image,gt_labels):
+    d2=min(image.data.shape[2],self.dim2)
+    d3=min(image.data.shape[3],self.dim3)
+    start2=np.random.randint(0,image.data.shape[2]-d2+1)
+    start3=np.random.randint(0,image.data.shape[3]-d3+1)
+    tmpimage=image[:,:,start2:(start2+d2),start3:(start3+d3)]
+    tmplabels=gt_labels[:,:,start2:(start2+d2),start3:(start3+d3)]
+    return(image[:,:,start2:(start2+d2),start3:(start3+d3)],gt_labels[:,:,start2:(start2+d2),start3:(start3+d3)])
+ 
 class RandomIntensity:
   def __init__(self,shiftlbound,shiftubound,multlbound,multubound):
     self.shiftlbound=shiftlbound

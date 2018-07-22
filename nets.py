@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from dataset import is_torch_none, is_iterable
+from torch.nn.functional import pad
 
 def get_nested_structure_level(x):
   if not is_iterable(x):
@@ -95,6 +96,14 @@ class Model(nn.Module):
       if i==0:
         out=x[i]
       else:
+        #print("Forward:")
+        #print(x[i].shape)
+        #print(out.shape)
+        
+        if out.data.shape[2]<=x[i].data.shape[2] and out.data.shape[3]<=x[i].data.shape[3]:
+          out=pad(out, [0,x[i].data.shape[3]-out.data.shape[3],0,x[i].data.shape[2]-out.data.shape[2]], 'constant', 0)
+        #print(out.shape)
+        #quit()
         out=torch.cat((out,x[i].repeat(1,self.structure[i][1],1,1)),dim=1)
       for layer in segment:
         out=layer(out)

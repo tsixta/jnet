@@ -8,7 +8,7 @@ from dataset import Cells,get_isbi_filenames,validation_split,is_iterable
 from nets import Model,load_model_from_file
 from train import train
 from eval import eval
-from augmentation import RandomRotation,RandomElastic,RandomFlipRotation,RandomIntensity
+from augmentation import RandomRotation,RandomElastic,RandomFlipRotation,RandomIntensity,RandomCrop
 
 class Mode(Enum):
   Train = 'train'
@@ -42,6 +42,18 @@ def eval_intensity_params(arg):
         pass
   return(ret)
 
+def eval_crop_params(arg):
+  ret=[]
+  if len(arg)>0:
+    ret=ast.literal_eval(arg)
+    if is_iterable(ret) and len(ret)==2:
+      try:
+        ret=[int(x) for x in ret]
+      except ValueError:
+        pass
+      if ret[0]<=0 or ret[1]<=0:
+        ret=[]
+  return(ret)
   
 def print_eval_vis_commands(args):
   cuda="--cuda" if args.cuda else ""
@@ -67,6 +79,7 @@ parser.add_argument('--output_dir', required=True, type=str,help='Output directo
 parser.add_argument('--mode',default=Mode.Train,type=Mode,help="Mode, one of the following: "+str([str(mode) for mode in list(Mode)]))
 parser.add_argument('--resolution_levels', required=True, type=str,help='List of resolutions in the pipeline. 0 means the original resolution, -1 downscale by factor 2, -2 downscale by factor 4 etc.')
 parser.add_argument('--structure',type=str,help='Structure of the network [[numof_layers1,numof_channels1,rf_size1],[numof_layers2,additional_numof_channels2,rf_size2],[numof_layers3,additional_numof_channels3,rf_size3]...]')
+parser.add_argument('--aug_crop_params', default='[]', type=str,help='Augmentation crop, dimensions of the resulting rectangle in input resolution [dim1 dim2], dim1<=0 or dim2<=0 means no cropping')
 parser.add_argument('--aug_elastic_params', default='[]', type=str,help='Augmentation elastic, list of admissible [alpha sigma], alpha<=0 or sigma<=0 means no elastic transform')
 parser.add_argument('--aug_intensity_params', default='[]', type=str,help='Augmentation intensity, list of [shift_lbound, shift_ubound, mult_lbound, mult_ubound]')
 parser.add_argument('--aug_rotation', action='store_true', help='Augmentation rotation.')
@@ -126,6 +139,9 @@ if args.mode is Mode.Train:
                   load_to_memory=bool(args.load_dataset_to_ram),
                   len_multiplier=args.dataset_len_multiplier,
                   use_cuda=augmentation_cuda)
+  crop_params=eval_crop_params(args.aug_crop_params)
+  if len(crop_params)==2:
+    train_set.add_transform("crop",RandomCrop(crop_params[0],crop_params[1]))
   if args.aug_rotation:
     train_set.add_transform("rotation",RandomRotation())
   intensity_params=eval_intensity_params(args.aug_intensity_params)
